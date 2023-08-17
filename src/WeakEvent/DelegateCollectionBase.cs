@@ -68,7 +68,7 @@ namespace WeakEvent
         /// The value is a list of indices in _delegates where there's a weak delegate
         /// for a handler with that hashcode.
         /// </summary>
-        private readonly Dictionary<int, List<int>> _index;
+        private Dictionary<int, List<int>> _index;
 
         private int _deletedCount;
         private int _deadHandlerScanCountdown = InitialDeadHandlersScanCountdown;
@@ -82,6 +82,11 @@ namespace WeakEvent
             _delegates = new List<WeakDelegate<TOpenEventHandler, TStrongHandler>?>();
             _index = new Dictionary<int, List<int>>();
             _createStrongHandler = createStrongHandler;
+        }
+        public void Clear()
+        {
+            _delegates = new List<WeakDelegate<TOpenEventHandler, TStrongHandler>?>();
+            _index = new Dictionary<int, List<int>>();
         }
 
         public void Add(object? lifetimeObject, Delegate[] invocationList)

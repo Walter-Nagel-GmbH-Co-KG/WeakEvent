@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard1.3;netstandard2.0;net40;net45</TargetFrameworks>
+        <TargetFrameworks>net6.0</TargetFrameworks>
         <LangVersion>8.0</LangVersion>
         <Nullable>enable</Nullable>
         <!-- For older SDK versions -->
@@ -30,10 +30,6 @@
         <DefineConstants>$(DefineConstants);NET40</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != 'net45' And '$(TargetFramework)' != 'netstandard1.3' And '$(TargetFramework)' != 'netstandard2.0'">
-        <Compile Remove="AsyncWeakEventSource.cs" />
-    </ItemGroup>
-
     <ItemGroup>
         <None Include="../../assets/weakevent.png" Pack="True" PackagePath="assets/weakevent.png" />
     </ItemGroup>
@@ -46,6 +42,11 @@
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
         <PackageReference Include="MinVer" Version="2.3.0" PrivateAssets="all" />
         <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.0.2" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\DependencyInjection\DependencyInjection.csproj" />
+      <ProjectReference Include="..\..\..\Utils.Contract\Utils.Contract.csproj" />
     </ItemGroup>
 
 </Project>

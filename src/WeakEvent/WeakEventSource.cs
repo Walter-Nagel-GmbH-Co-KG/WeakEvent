@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+using WN.DependencyInjection;
+using WN.Utils.Contract.Interfaces;
 using static WeakEvent.WeakEventSourceHelper;
 
 namespace WeakEvent
@@ -12,7 +14,20 @@ namespace WeakEvent
         where TEventArgs : EventArgs
 #endif
     {
+
+        private static IElevatorService? elevatorService;
         internal DelegateCollection? _handlers;
+
+        public WeakEventSource()
+        {
+        }
+        private void checkElevator()
+        {
+            if (ServiceProviderLocator.ServiceProvider != null && elevatorService == null)
+            {
+                elevatorService = ServiceProviderLocator.ServiceProvider.GetService(typeof(IElevatorService)) as IElevatorService;
+            }
+        }
 
         /// <summary>
         /// Raises the event by invoking each handler that hasn't been garbage collected.
@@ -22,10 +37,14 @@ namespace WeakEvent
         /// <remarks>The handlers are invoked one after the other, in the order they were subscribed in.</remarks>
         public void Raise(object? sender, TEventArgs args)
         {
+            checkElevator();
             var validHandlers = GetValidHandlers(_handlers);
-            foreach (var handler in validHandlers)
+            foreach (StrongHandler handler in validHandlers)
             {
-                handler.Invoke(sender, args);
+                if (elevatorService == null)
+                    handler.Invoke(sender, args);
+                else
+                    elevatorService?.Elevat(handler.Target.GetType().Module.Name, (a) => handler.Invoke(sender, args));
             }
         }
 
@@ -40,18 +59,30 @@ namespace WeakEvent
         /// <remarks>The handlers are invoked one after the other, in the order they were subscribed in.</remarks>
         public void Raise(object? sender, TEventArgs args, Func<Exception, bool> exceptionHandler)
         {
+            checkElevator();
             if (exceptionHandler is null) throw new ArgumentNullException(nameof(exceptionHandler));
             var validHandlers = GetValidHandlers(_handlers);
             foreach (var handler in validHandlers)
             {
                 try
                 {
-                    handler.Invoke(sender, args);
+                    if (elevatorService == null)
+                        handler.Invoke(sender, args);
+                    else
+                        elevatorService?.Elevat(handler.Target.GetType().Module.Name, (a) => handler.Invoke(sender, args));
                 }
                 catch (Exception ex) when (exceptionHandler(ex))
                 {
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes all event handlers.
+        /// </summary>
+        public void Clear()
+        {
+            _handlers.Clear();
         }
 
         /// <summary>
@@ -105,18 +136,18 @@ namespace WeakEvent
 
         internal struct StrongHandler
         {
-            private readonly object? _target;
-            private readonly OpenEventHandler _openHandler;
+            public readonly object? Target { get; }
+            public readonly OpenEventHandler OpenHandler { get; }
 
             public StrongHandler(object? target, OpenEventHandler openHandler)
             {
-                _target = target;
-                _openHandler = openHandler;
+                Target = target;
+                OpenHandler = openHandler;
             }
 
             public void Invoke(object? sender, TEventArgs e)
             {
-                _openHandler(_target, sender, e);
+                OpenHandler(Target, sender, e);
             }
         }
 

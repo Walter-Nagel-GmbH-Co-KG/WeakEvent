@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using WN.DependencyInjection;
+using WN.Utils.Contract.Interfaces;
 using static WeakEvent.WeakEventSourceHelper;
 
 namespace WeakEvent
@@ -21,6 +24,23 @@ namespace WeakEvent
     {
         internal DelegateCollection? _handlers;
 
+        private static IElevatorService? elevatorService;
+        public AsyncWeakEventSource()
+        {
+        }
+        private void checkElevator()
+        {
+            if (ServiceProviderLocator.ServiceProvider != null && elevatorService == null)
+            {
+                elevatorService = ServiceProviderLocator.ServiceProvider.GetService(typeof(IElevatorService)) as IElevatorService;
+            }
+        }
+
+        public async void Clear()
+        {
+            _handlers.Clear();
+        }
+
         /// <summary>
         /// Raises the event by invoking each handler that hasn't been garbage collected.
         /// </summary>
@@ -30,10 +50,14 @@ namespace WeakEvent
         /// Each handler is awaited before invoking the next one.</remarks>
         public async Task RaiseAsync(object? sender, TEventArgs args)
         {
+            checkElevator();
             var validHandlers = GetValidHandlers(_handlers);
             foreach (var handler in validHandlers)
             {
-                await handler.Invoke(sender, args).ConfigureAwait(false);
+                if (elevatorService == null)
+                    await handler.Invoke(sender, args).ConfigureAwait(false);
+                else
+                    elevatorService?.Elevat(handler.Target.GetType().Module.Name, async (a) => await handler.Invoke(sender, args).ConfigureAwait(false));
             }
         }
 
@@ -49,13 +73,17 @@ namespace WeakEvent
         /// Each handler is awaited before invoking the next one.</remarks>
         public async Task RaiseAsync(object? sender, TEventArgs args, Func<Exception, bool> exceptionHandler)
         {
+            checkElevator();
             if (exceptionHandler is null) throw new ArgumentNullException(nameof(exceptionHandler));
             var validHandlers = GetValidHandlers(_handlers);
             foreach (var handler in validHandlers)
             {
                 try
                 {
-                    await handler.Invoke(sender, args).ConfigureAwait(false);
+                    if (elevatorService == null)
+                        await handler.Invoke(sender, args).ConfigureAwait(false);
+                    else
+                        elevatorService?.Elevat(handler.Target.GetType().Module.Name, async (a) => await handler.Invoke(sender, args).ConfigureAwait(false));
                 }
                 catch (Exception ex) when (exceptionHandler(ex))
                 {
@@ -144,18 +172,18 @@ namespace WeakEvent
 
         internal struct StrongHandler
         {
-            private readonly object? _target;
-            private readonly OpenEventHandler _openHandler;
+            public readonly object? Target { get; }
+            public OpenEventHandler OpenHandler { get; }
 
             public StrongHandler(object? target, OpenEventHandler openHandler)
             {
-                _openHandler = openHandler;
-                _target = target;
+                OpenHandler = openHandler;
+                Target = target;
             }
 
             public Task Invoke(object? sender, TEventArgs e)
             {
-                return _openHandler(_target, sender, e);
+                return OpenHandler(Target, sender, e);
             }
         }
 
