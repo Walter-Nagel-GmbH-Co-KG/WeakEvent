@@ -95,7 +95,7 @@ namespace WeakEvent
             {
                 var openHandler = OpenHandlerCache.GetOrAdd(singleHandler.GetMethodInfo(), CreateOpenHandler);
                 if (!uniqueRegistration ||
-                    (uniqueRegistration && !_delegates.Any(item => item.IsMatch(singleHandler))))
+                    (uniqueRegistration && !_delegates.Any(item => item != null && item.IsMatch(singleHandler))))
                 {
                     _delegates.Add(new WeakDelegate<TOpenEventHandler, TStrongHandler>(lifetimeObject, singleHandler, openHandler, _createStrongHandler));
                     var index = _delegates.Count - 1;
