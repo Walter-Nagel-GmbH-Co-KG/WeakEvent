@@ -90,9 +90,9 @@ namespace WeakEvent
         /// </summary>
         /// <param name="handler">The handler to subscribe.</param>
         /// <remarks>Only a weak reference to the handler's <c>Target</c> is kept, so that it can be garbage collected.</remarks>
-        public void Subscribe(EventHandler<TEventArgs> handler)
+        public void Subscribe(EventHandler<TEventArgs> handler, Boolean uniqueRegistration = false)
         {
-            Subscribe(null, handler);
+            Subscribe(null, handler, uniqueRegistration);
         }
 
         /// <summary>
@@ -103,9 +103,9 @@ namespace WeakEvent
         /// <remarks>Only a weak reference to the handler's <c>Target</c> is kept, so that it can be garbage collected.
         /// However, as long as the <c>lifetime</c> object is alive, the handler will be kept alive. This is useful for
         /// subscribing with anonymous methods (e.g. lambda expressions).</remarks>
-        public void Subscribe(object? lifetimeObject, EventHandler<TEventArgs> handler)
+        public void Subscribe(object? lifetimeObject, EventHandler<TEventArgs> handler, Boolean uniqueRegistration = false)
         {
-            Subscribe<DelegateCollection, OpenEventHandler, StrongHandler>(lifetimeObject, ref _handlers, handler);
+            Subscribe<DelegateCollection, OpenEventHandler, StrongHandler>(lifetimeObject, ref _handlers, handler, uniqueRegistration);
         }
 
         /// <summary>

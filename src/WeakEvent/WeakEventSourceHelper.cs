@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -41,7 +41,8 @@ namespace WeakEvent
         public static void Subscribe<TDelegateCollection, TOpenEventHandler, TStrongHandler>(
             object? lifetimeObject,
             ref TDelegateCollection? handlers,
-            Delegate handler)
+            Delegate handler,
+            Boolean uniqueRegistation = false)
             where TDelegateCollection : DelegateCollectionBase<TOpenEventHandler, TStrongHandler>, new()
             where TOpenEventHandler : Delegate
             where TStrongHandler : struct
@@ -54,7 +55,7 @@ namespace WeakEvent
             LazyInitializer.EnsureInitialized(ref handlers);
             lock (handlers!)
             {
-                handlers.Add(lifetimeObject, invocationList);
+                handlers.Add(lifetimeObject, invocationList, uniqueRegistation);
             }
         }
 

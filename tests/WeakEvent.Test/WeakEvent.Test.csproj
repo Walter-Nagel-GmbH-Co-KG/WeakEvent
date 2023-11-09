@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>WN.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>WN.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyVersion>3.0.0.11</AssemblyVersion>
+    <FileVersion>3.0.0.11</FileVersion>
+    <Version>3.0.0</Version>
+    <Product>MultiDotScan3.0</Product>
+    <Company>Walter Nagel GmbH &amp; Co. KG</Company>
+    <Copyright>Walter Nagel GmbH &amp; Co. KG</Copyright>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <IsPackable>false</IsPackable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="Moq" Version="4.17.2" />
+    <PackageReference Include="NUnit" Version="3.13.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+    <PackageReference Include="coverlet.collector" Version="3.1.0" />
+    <PackageReference Include="NunitXml.TestLogger" Version="3.0.117" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WeakEvent\WeakEvent.csproj" />
+  </ItemGroup>
+  <Target Name="RemoveSourceGeneratedFiles" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Compile Remove="Generated\**" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -89,15 +89,19 @@ namespace WeakEvent
             _index = new Dictionary<int, List<int>>();
         }
 
-        public void Add(object? lifetimeObject, Delegate[] invocationList)
+        public void Add(object? lifetimeObject, Delegate[] invocationList, Boolean uniqueRegistration)
         {
             foreach (var singleHandler in invocationList)
             {
                 var openHandler = OpenHandlerCache.GetOrAdd(singleHandler.GetMethodInfo(), CreateOpenHandler);
-                _delegates.Add(new WeakDelegate<TOpenEventHandler, TStrongHandler>(lifetimeObject, singleHandler, openHandler, _createStrongHandler));
-                var index = _delegates.Count - 1;
-                AddToIndex(singleHandler, index);
-                KeepTargetAlive(lifetimeObject, singleHandler.Target);
+                if (!uniqueRegistration ||
+                    (uniqueRegistration && !_delegates.Any(item => item.IsMatch(singleHandler))))
+                {
+                    _delegates.Add(new WeakDelegate<TOpenEventHandler, TStrongHandler>(lifetimeObject, singleHandler, openHandler, _createStrongHandler));
+                    var index = _delegates.Count - 1;
+                    AddToIndex(singleHandler, index);
+                    KeepTargetAlive(lifetimeObject, singleHandler.Target);
+                }
             }
 
             TryScanDeadHandlers();
