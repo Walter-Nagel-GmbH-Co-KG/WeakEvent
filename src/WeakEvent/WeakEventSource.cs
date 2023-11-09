@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using WN.DependencyInjection;
 using WN.Utils.Contract.Interfaces;
 using static WeakEvent.WeakEventSourceHelper;
@@ -35,12 +36,14 @@ namespace WeakEvent
         /// <param name="sender">The source of the event.</param>
         /// <param name="args">An object that contains the event data.</param>
         /// <remarks>The handlers are invoked one after the other, in the order they were subscribed in.</remarks>
-        public void Raise(object? sender, TEventArgs args)
+        public void Raise(object? sender, TEventArgs args, EventHandler<TEventArgs>? excludedHandler = null)
         {
             checkElevator();
             var validHandlers = GetValidHandlers(_handlers);
             foreach (StrongHandler handler in validHandlers)
             {
+                if (handler.OpenHandler.GetInvocationList().Contains(excludedHandler))
+                    continue;
                 if (elevatorService == null)
                     handler.Invoke(sender, args);
                 else
