@@ -8,7 +8,8 @@ namespace WeakEvent
     internal static class WeakEventSourceHelper
     {
         public static IEnumerable<TStrongHandler> GetValidHandlers<TOpenEventHandler, TStrongHandler>(
-            DelegateCollectionBase<TOpenEventHandler, TStrongHandler>? handlers)
+            DelegateCollectionBase<TOpenEventHandler, TStrongHandler>? handlers,
+            IEnumerable<Delegate>? excludedHandler = null)
             where TOpenEventHandler : Delegate
             where TStrongHandler : struct
         {
@@ -24,6 +25,9 @@ namespace WeakEvent
                     var weakHandler = handlers[i];
                     if (weakHandler is {})
                     {
+                        if(excludedHandler != null &&
+                            excludedHandler.Any(handler => weakHandler.IsMatch(handler)))
+                            continue;
                         if (weakHandler.TryGetStrongHandler() is TStrongHandler handler)
                             validHandlers.Add(handler);
                         else

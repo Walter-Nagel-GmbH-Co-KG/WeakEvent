@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using WN.DependencyInjection;
 using WN.Utils.Contract.Interfaces;
@@ -30,20 +31,20 @@ namespace WeakEvent
             }
         }
 
+
         /// <summary>
         /// Raises the event by invoking each handler that hasn't been garbage collected.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="args">An object that contains the event data.</param>
         /// <remarks>The handlers are invoked one after the other, in the order they were subscribed in.</remarks>
-        public void Raise(object? sender, TEventArgs args, EventHandler<TEventArgs>? excludedHandler = null)
+        public void Raise(object? sender, TEventArgs args, IEnumerable<Delegate>? excludedHandler = null)
         {
             checkElevator();
-            var validHandlers = GetValidHandlers(_handlers);
+            var validHandlers = GetValidHandlers(_handlers, excludedHandler);
             foreach (StrongHandler handler in validHandlers)
             {
-                if (handler.OpenHandler.GetInvocationList().Contains(excludedHandler))
-                    continue;
+                
                 if (elevatorService == null)
                     handler.Invoke(sender, args);
                 else
